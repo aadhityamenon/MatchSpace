@@ -16,6 +16,7 @@ const studentRoutes = require('./routes/students');
 const bookingRoutes = require('./routes/bookings');
 const messageRoutes = require('./routes/messages');
 const searchRoutes = require('./routes/search');
+const chatRoutes = require('./routes/chatroutes');
 
 // Create Express app
 const app = express();
@@ -56,6 +57,7 @@ app.use('/api/students', auth, studentRoutes);
 app.use('/api/bookings', auth, bookingRoutes);
 app.use('/api/messages', auth, messageRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === 'production') {

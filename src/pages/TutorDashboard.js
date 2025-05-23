@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, DollarSign, Users, Settings, Bell, Star, BookOpen, TrendingUp, MessageCircle } from 'lucide-react';
+import TutorVerification from './TutorVerification';
 
 const TutorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -439,6 +440,9 @@ const TutorDashboard = () => {
             Save Changes
           </button>
         </div>
+      </div>
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <TutorVerification tutorId={user._id} /> {/* Replace with real ID */}
       </div>
     </div>
   );

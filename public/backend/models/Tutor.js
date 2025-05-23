@@ -71,6 +71,13 @@ const TutorSchema = new Schema({
     type: Number,
     default: 0
   },
+  verified: { 
+    type: Boolean, 
+    default: false 
+  },
+  verificationDocs: {
+    type: String 
+  }, // Array of file URLs or paths
   isApproved: {
     type: Boolean,
     default: false
