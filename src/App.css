@@ -1,5 +1,28 @@
+/* Add Tailwind base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom styles below */
 .App {
-  text-align: center;
+  /* Remove text-align: center; - this was causing the clustering */
+  min-height: 100vh;
+}
+
+/* Ensure proper text alignment for different sections */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Override any inherited text alignment */
+section {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center !important;
 }
 
 .App-logo {
@@ -35,4 +58,22 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 6s ease-in-out infinite 2s;
 }

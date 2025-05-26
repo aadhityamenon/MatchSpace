@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, DollarSign, Users, Settings, Bell, Star, BookOpen, TrendingUp, MessageCircle } from 'lucide-react';
-import TutorVerification from './TutorVerification';
+import TutorVerification from '../components/TutorVerification';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const TutorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useContext(AuthContext);
   const [tutorData, setTutorData] = useState({
     name: 'Dr. Sarah Johnson',
     avatar: '/api/placeholder/80/80',

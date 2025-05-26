@@ -7,10 +7,9 @@ import TutorSearch from './components/TutorSearch';
 import TutorProfile from './components/TutorProfile';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import TutorApplication from './components/TutorApplication';
 import TutorDashboard from './pages/TutorDashboard';
-import StudentDashboard from './pages/StudentDashboard';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import './App.css';
@@ -30,7 +29,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <StudentDashboard />
                 </PrivateRoute>
               } />
               <Route path="/apply" element={
