@@ -1,5 +1,5 @@
 const express = require('express');
-const stripe = require('stripe')('sk_test_51RUIkLRUznSFQOnvXmFIKu3PAr4GXRPCrkQpx1qj0RCx7VD5XdrInQhQg6DbE9zdck8ZSgtFY8Dg85F50tCWvqYp005Em6FXd9');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { authenticateToken } = require('../authMiddleware');
 const Booking = require('../models/Booking');
 const User = require('../models/User');
