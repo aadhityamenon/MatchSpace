@@ -1,15 +1,19 @@
+// server/routes/authroutes.js
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
+// Import your authentication middleware
+const { authenticateToken, authorizeRoles } = require('../authMiddleware'); // Correct path relative to authroutes.js
 const router = express.Router();
 
-// Generate JWT token
+// Generate JWT token (existing)
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
-// Generate refresh token
+// Generate refresh token (existing)
 const generateRefreshToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 };
@@ -52,9 +56,11 @@ router.post('/register', [
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Save refresh token to user
-    user.refreshToken = refreshToken;
-    await user.save();
+    // Save refresh token to user (consider if you always need to save it here for initial register)
+    user.refreshToken = refreshToken; // This will trigger pre('save') hash again if password was changed
+    // IMPORTANT: If you hash on pre('save') AND you modify user.refreshToken, you need to ensure password isn't re-hashed if it hasn't changed.
+    // Your current pre('save') hook handles this: `if (!user.isModified('password')) return next();` which is good.
+    await user.save(); // Save again to store the refreshToken
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -150,22 +156,18 @@ router.post('/refresh-token', async (req, res) => {
     });
 
   } catch (error) {
+    // console.error(error); // Log error for debugging
     res.status(401).json({ message: 'Invalid refresh token' });
   }
 });
 
 // @route   GET /api/auth/me
 // @desc    Get current user
-// @access  Private
-router.get('/me', async (req, res) => {
+// @access  Private (now using middleware)
+router.get('/me', authenticateToken, async (req, res) => { // <-- MODIFIED LINE
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password -refreshToken');
+    // req.user.userId is now available thanks to authenticateToken middleware
+    const user = await User.findById(req.user.userId).select('-password -refreshToken');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -174,22 +176,18 @@ router.get('/me', async (req, res) => {
     res.json({ user: user.getProfile() });
 
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' });
+    console.error(error); // Log the actual error for debugging
+    res.status(500).json({ message: 'Server error fetching user profile' });
   }
 });
 
 // @route   PUT /api/auth/profile
 // @desc    Update user profile
-// @access  Private
-router.put('/profile', async (req, res) => {
+// @access  Private (now using middleware)
+router.put('/profile', authenticateToken, async (req, res) => { // <-- MODIFIED LINE
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    // req.user.userId is now available thanks to authenticateToken middleware
+    const user = await User.findById(req.user.userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -200,6 +198,7 @@ router.put('/profile', async (req, res) => {
     // Update user fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
+    // Check for explicit 'undefined' to allow clearing fields if client sends empty string
     if (bio !== undefined) user.bio = bio;
     if (phone !== undefined) user.phone = phone;
     if (profilePicture !== undefined) user.profilePicture = profilePicture;
@@ -219,25 +218,21 @@ router.put('/profile', async (req, res) => {
 
 // @route   POST /api/auth/logout
 // @desc    Logout user
-// @access  Private
-router.post('/logout', async (req, res) => {
+// @access  Private (now using middleware)
+router.post('/logout', authenticateToken, async (req, res) => { // <-- MODIFIED LINE
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    // req.user.userId is now available
+    const user = await User.findById(req.user.userId);
 
     if (user) {
-      user.refreshToken = null;
+      user.refreshToken = null; // Clear refresh token to invalidate session
       await user.save();
     }
 
     res.json({ message: 'Logged out successfully' });
 
   } catch (error) {
+    console.error(error); // Log the actual error for debugging
     res.status(500).json({ message: 'Server error during logout' });
   }
 });
