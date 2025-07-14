@@ -26,7 +26,7 @@ const reviewsRoutes = require('./routes/reviewsroutes');
 
 // --- Import your shared authentication middleware ---
 // IMPORTANT: This path assumes you created server/middleware/authMiddleware.js
-const { authenticateToken } = require('./authMiddleware'); 
+const {authenticateToken} = require('./authMiddleware'); 
 
 // Create Express app
 const app = express();
@@ -59,7 +59,7 @@ app.use('/api/bookings', authenticateToken, bookingRoutes);
 app.use('/api/messages', authenticateToken, messageRoutes);
 app.use('/api/chat', authenticateToken, chatRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);
-app.use('/api/upload', authenticateToken, fileuploadRoutes); // This is the line we're focusing on!
+app.use('/api/upload', authenticateToken, fileuploadRoutes); 
 app.use('/api/notifications', authenticateToken, notificationRoutes);
 app.use('/api/payments', authenticateToken, paymentRoutes);
 

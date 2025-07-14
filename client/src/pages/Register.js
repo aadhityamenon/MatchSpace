@@ -1,62 +1,84 @@
 // client/src/pages/Register.js
+import React, { useState, useContext, useEffect } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext'; // Assuming AuthContext is compatible
 
-import React, { useState, useContext, useEffect } from 'react'; // Added useContext and useEffect
-import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
-import { AuthContext } from '../context/AuthContext'; // Import AuthContext
+// Material UI Imports
+import {
+  Box,
+  Typography, // Replaces Heading and Text
+  TextField,  // Replaces Input (and handles FormControl, FormLabel, FormErrorMessage implicitly)
+  Button,
+  Stack,      // Replaces VStack
+  FormControl, // For Select component
+  InputLabel,  // For label of Select
+  Select,      // Replaces Chakra Select
+  MenuItem,    // Options for Select
+  Snackbar,    // For toasts
+  Alert,       // For toast content
+  CircularProgress, // Replaces Spinner
+  Link as MuiLink,  // Alias for MUI's Link to avoid conflict with RouterLink
+  useTheme,    // To access theme colors/spacing
+} from '@mui/material';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    firstName: '', // Changed 'name' to 'firstName' to match backend User model
-    lastName: '',  // Added lastName as per backend User model
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student' // Changed 'userType' to 'role' to match backend User model
+    role: 'student' // Default to student
   });
-  const [error, setError] = useState(''); // State for displaying registration errors
-  const [loading, setLoading] = useState(false); // State for registration button loading
+  const [errorMessage, setErrorMessage] = useState(''); // Unified error message state
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false); // State for Snackbar visibility
 
-  const { register, isAuthenticated, currentUser } = useContext(AuthContext); // Get register function, isAuthenticated, and currentUser from context
-  const navigate = useNavigate(); // Hook for navigation
+  const { register, isAuthenticated, currentUser } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const theme = useTheme(); // Access the theme for colors and spacing
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (similar to Login.js)
   useEffect(() => {
     if (isAuthenticated && currentUser) {
+      // Adjusted paths to be consistent with what's defined in App.js
       if (currentUser.role === 'student') {
-        navigate('/student/dashboard');
+        navigate('/student-dashboard'); // Matches App.js route
       } else if (currentUser.role === 'tutor') {
-        navigate('/tutor/dashboard');
+        navigate('/tutor-dashboard'); // Matches App.js route
       } else if (currentUser.role === 'admin') {
-        navigate('/admin/dashboard'); // Assuming you'll have an admin dashboard
+        // You might need an /admin-dashboard route if you have one
+        navigate('/admin-dashboard'); // Placeholder
       } else {
-        navigate('/'); // Fallback if role is not recognized
+        navigate('/');
       }
     }
-  }, [isAuthenticated, currentUser, navigate]); // Dependencies for useEffect
+  }, [isAuthenticated, currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors
-    setLoading(true); // Set loading state
+    setErrorMessage(''); // Clear previous errors
+    setLoading(true);
+    setSnackbarOpen(false); // Close any existing snackbar
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setErrorMessage('Passwords do not match.');
+      setSnackbarOpen(true);
       setLoading(false);
       return;
     }
 
     try {
-      // Destructure formData to match backend's expected properties (firstName, lastName, email, password, role)
-      const { firstName, lastName, email, password, role } = formData;
-      const userData = await register({ firstName, lastName, email, password, role });
-      // Registration successful, AuthContext will handle state update and useEffect will redirect
-      console.log('Registration successful:', userData);
+      // Assuming register function takes formData object directly
+      await register(formData);
+      // Success will trigger useEffect for redirection
     } catch (err) {
       console.error('Registration failed:', err);
-      // 'err' here will be the message thrown from AuthContext (e.g., 'User already exists')
-      setError(err || 'Registration failed. Please try again.');
+      const msg = err.message || "An error occurred during registration. Please try again.";
+      setErrorMessage(msg);
+      setSnackbarOpen(true); // Open Snackbar to show the error
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -67,103 +89,183 @@ const Register = () => {
     });
   };
 
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md"> {/* Added padding, bg, rounded, shadow */}
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: theme.palette.secondary.light, // Using theme's secondary.light (Chakra brand.50 equivalent)
+        p: { xs: 2, sm: 3 }, // Responsive padding (Chakra p={base:4, sm:6} equivalent)
+      }}
+    >
+      <Box
+        sx={{
+          p: 4, // p={8} equivalent in Chakra is 32px, MUI p={4} is 32px
+          maxWidth: '448px', // maxWidth="md" approx 48rem = 768px, but your Box uses maxWidth="md" with p={8} within it. Adjust max width here if needed.
+          width: '100%',
+          bgcolor: 'background.paper', // White background
+          borderRadius: '12px', // rounded="xl" in Chakra
+          boxShadow: theme.shadows[4], // shadow="2xl" in Chakra. theme.shadows[4] is a good equivalent.
+          border: `1px solid ${theme.palette.divider}`, // borderWidth="1px" borderColor="gray.200"
+        }}
+      >
+        <Stack spacing={2} alignItems="center" sx={{ mb: 4 }}> {/* VStack spacing={4} align="center" */}
+          <Typography variant="h4" component="h2" sx={{ mt: 1, textAlign: 'center', fontWeight: 'bold' }}> {/* Heading as="h2" size="xl", mt={2} */}
             Create your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && ( // Display error message if present
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-          <div>
-            <input
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}> {/* Text fontSize="sm" color="gray.600" */}
+            Already have an account?{' '}
+            <MuiLink component={RouterLink} to="/login" sx={{
+              color: 'primary.main', // brand.500
+              '&:hover': { color: 'primary.dark', textDecoration: 'underline' }, // brand.600
+              fontWeight: 'medium',
+            }}>
+              Sign in here
+            </MuiLink>
+          </Typography>
+        </Stack>
+
+        <form onSubmit={handleSubmit}>
+          <Stack spacing={3} mt={4}> {/* VStack spacing={6} mt={8} - MUI spacing 3 for 24px, 4 for 32px */}
+            <TextField
+              fullWidth
+              id="firstName"
+              label="First Name"
               type="text"
-              name="firstName" // Changed to firstName
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="First Name" // Updated placeholder
+              name="firstName"
+              placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
-            />
-          </div>
-          <div>
-            <input
-              type="text"
-              name="lastName" // Added lastName input
               required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              size="medium" // 'large' in Chakra size="lg", 'medium' is standard in MUI
+              variant="filled" // Optional: 'outlined', 'standard'
+              // No specific error handling here as it's typically required
+            />
+
+            <TextField
+              fullWidth
+              id="lastName"
+              label="Last Name"
+              type="text"
+              name="lastName"
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
+              required
+              size="medium"
+              variant="filled"
             />
-          </div>
-          <div>
-            <input
+
+            <TextField
+              fullWidth
+              id="email"
+              label="Email address"
               type="email"
               name="email"
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               placeholder="Email address"
               value={formData.email}
               onChange={handleChange}
+              required
+              size="medium"
+              variant="filled"
+              error={!!errorMessage && errorMessage.includes('email')} // Example error check for email
+              helperText={!!errorMessage && errorMessage.includes('email') ? errorMessage : ''}
             />
-          </div>
-          <div>
-            <input
+
+            <TextField
+              fullWidth
+              id="password"
+              label="Password"
               type="password"
               name="password"
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
+              required
+              size="medium"
+              variant="filled"
+              error={!!errorMessage && errorMessage.includes('Password')} // Error for general password issues
+              helperText={!!errorMessage && errorMessage.includes('Password') ? errorMessage : ''}
             />
-          </div>
-          <div>
-            <input
+
+            <TextField
+              fullWidth
+              id="confirmPassword"
+              label="Confirm Password"
               type="password"
               name="confirmPassword"
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Confirm password"
+              placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
+              required
+              size="medium"
+              variant="filled"
+              error={!!errorMessage && errorMessage.includes('match')} // Error for password mismatch
+              helperText={!!errorMessage && errorMessage.includes('match') ? errorMessage : ''}
             />
-          </div>
-          <div>
-            <select
-              name="role" // Changed to 'role'
-              value={formData.role}
-              onChange={handleChange}
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            >
-              <option value="student">Student</option>
-              <option value="tutor">Tutor</option>
-            </select>
-          </div>
-          <div>
-            <button
+
+            {/* Role Selection */}
+            <FormControl fullWidth variant="filled" size="medium">
+              <InputLabel id="role-select-label">Role</InputLabel>
+              <Select
+                labelId="role-select-label"
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                label="Role" // This makes the label appear correctly with the 'filled' variant
+              >
+                <MenuItem value="student">Student</MenuItem>
+                <MenuItem value="tutor">Tutor</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading} // Disable button while loading
+              color="primary" // Uses 'primary' color from theme
+              variant="contained" // Solid button style
+              size="large" // 'lg' in Chakra, 'large' in MUI
+              fullWidth // 'full' width
+              disabled={loading} // Disable button when loading
+              sx={{
+                mt: 3, // Add margin top if needed, based on Stack spacing
+                py: 1.5, // Adjust vertical padding for button size consistency
+                fontSize: '1rem', // Match Chakra's 'lg' font size for buttons
+                fontWeight: 'bold',
+                position: 'relative',
+                '& .MuiButton-startIcon': {
+                  marginRight: loading ? '8px' : '0', // Add space when spinner is active
+                },
+              }}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
-              {loading ? 'Registering...' : 'Sign Up'} {/* Change button text based on loading state */}
-            </button>
-          </div>
-          <div className="text-center">
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Already have an account? Sign in
-            </Link>
-          </div>
+              {loading ? 'Registering...' : 'Sign Up'}
+            </Button>
+          </Stack>
         </form>
-      </div>
-    </div>
+      </Box>
+
+      {/* Snackbar for error messages (replaces Chakra Toast) */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={5000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} // Position "top"
+      >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

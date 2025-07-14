@@ -1,65 +1,93 @@
+// client/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+
+// Import your AuthProvider from the context directory
+import { AuthProvider } from './context/AuthContext'; // Path based on your file structure
+
+// Import your converted Material UI components
+import Navbar from './components/Navbar'; // Your converted Navbar component
+import Footer from './components/Footer'; // Your converted Footer component
+
+// Import your page components from the pages directory
+// IMPORTANT: You MUST create these files (e.g., src/pages/Home.js, etc.)
+// and convert their content to Material UI for your application to render them.
 import Home from './pages/Home';
-import TutorSearch from './components/TutorSearch';
-import TutorProfile from './components/TutorProfile';
-import Register from './pages/Register';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
-import TutorApplication from './components/TutorApplication';
 import TutorDashboard from './pages/TutorDashboard';
-import { AuthProvider } from './context/AuthContext';
-import PrivateRoute from './components/PrivateRoute'; // Ensure correct import name
+
+// You also have these pages/components mentioned in Navbar or your file structure
+// Make sure to create these files in src/pages/ or src/components/ as appropriate.
+import Search from './components/Search'; // Assuming Search is a component, not a full page
+import TutorApplication from './components/TutorApplication'; // Assuming this is a component
+import ProfileSettings from './components/ProflieSettings'; // Check for typo: 'ProfilieSettings' vs 'ProfileSettings'
+import PrivateRoute from './components/PrivateRoute'; // Assuming this is a route guard component
+import AdminTutorReview from './components/AdminTutorReview'; // Component
+import BookingSystem from './components/BookingSystem'; // Component
+import Chat from './components/Chat'; // Component
+import TutorProfile from './components/TutorProfile'; // Component
+import TutorSearch from './components/TutorSearch'; // Component
+import TutorVerification from './components/TutorVerification'; // Component
+
+// Material UI Box for flexible layout containers
+import { Box } from '@mui/material';
 
 function App() {
   return (
+    // AuthProvider should wrap your entire application so that all components can access auth state
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<TutorSearch />} />
-              <Route path="/tutors/:id" element={<TutorProfile />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
+        {/* Navbar is placed outside <Routes> so it's always visible on every page */}
+        <Navbar />
 
-              {/* Private Routes - Student */}
-              <Route 
-                path="/student/dashboard" // Changed path for clarity
-                element={<PrivateRoute allowedRoles={['student']} />} // Pass allowedRoles prop
-              >
-                <Route index element={<StudentDashboard />} /> {/* Nested route for StudentDashboard */}
-              </Route>
+        {/*
+          The <Box component="main"> is used here to contain your page content.
+          The 'Spacer' in the Navbar (a Toolbar) ensures that content doesn't
+          get hidden behind the fixed Navbar.
+        */}
+        <Box component="main" sx={{ flexGrow: 1 }}> {/* flexGrow ensures it takes available space */}
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            {/* If 'Search' is a full page, move it to pages/ and adjust import */}
+            <Route path="/search" element={<Search />} />
+            {/* Assuming /apply uses the TutorApplication component */}
+            <Route path="/apply" element={<TutorApplication />} />
 
-              {/* Private Routes - Tutor */}
-              <Route 
-                path="/tutor/dashboard" // Changed path for clarity
-                element={<PrivateRoute allowedRoles={['tutor']} />} // Pass allowedRoles prop
-              >
-                <Route index element={<TutorDashboard />} /> {/* Nested route for TutorDashboard */}
-              </Route>
-              
-              {/* Private Route - Tutor Application (can be accessed by any logged-in user or specifically by students looking to become tutors) */}
-              {/* You might want to adjust allowedRoles based on who should apply */}
-              <Route 
-                path="/apply" 
-                element={<PrivateRoute allowedRoles={['student', 'tutor']} />} // Example: Allow students to apply, and maybe tutors to review/update their application (less common)
-              >
-                <Route index element={<TutorApplication />} />
-              </Route>
 
-              {/* Catch-all route for 404 (optional) */}
-              <Route path="*" element={<p className="text-center mt-20 text-xl">404: Page Not Found</p>} />
+            {/* Protected Routes (using your PrivateRoute component) */}
+            {/* Wrap routes that require authentication with your PrivateRoute */}
+            <Route element={<PrivateRoute />}>
+                {/* User Dashboards */}
+                <Route path="/student-dashboard" element={<StudentDashboard />} />
+                <Route path="/tutor-dashboard" element={<TutorDashboard />} />
 
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+                {/* Profile & Settings */}
+                <Route path="/profile" element={<ProfileSettings />} /> {/* Corrected typo based on Navbar's use of /profile */}
+                <Route path="/settings" element={<ProfileSettings />} /> {/* Assuming settings also uses ProfileSettings component */}
+
+                {/* Assuming these are full pages or can be displayed directly */}
+                {/* If these are components used *within* pages, adjust their routes */}
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/tutor/:tutorId" element={<TutorProfile />} /> {/* Example: Route for individual tutor profiles */}
+                <Route path="/tutor-search" element={<TutorSearch />} /> {/* If different from /search */}
+                {/* Routes that might be nested or have specific access roles: */}
+                {/* <Route path="/admin/tutor-reviews" element={<AdminTutorReview />} /> */}
+                {/* <Route path="/bookings" element={<BookingSystem />} /> */}
+                {/* <Route path="/tutor-verification" element={<TutorVerification />} /> */}
+                {/* <Route path="/earnings" element={<EarningsPage />} /> */} {/* This was in Navbar dropdown */}
+            </Route>
+
+            {/* Add more routes as needed based on your application's navigation */}
+          </Routes>
+        </Box>
+
+        {/* Footer is placed outside <Routes> so it's always visible on every page */}
+        <Footer />
       </Router>
     </AuthProvider>
   );

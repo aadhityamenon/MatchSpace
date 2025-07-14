@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from './AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { formatISO, parseISO, format, addHours } from 'date-fns';
